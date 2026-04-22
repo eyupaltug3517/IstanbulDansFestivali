@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biletler — İstanbul Dans Festivali 2025</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="description" content="İstanbul Dans Festivali 2025 Biletleri — Tekil etkinlik, Festival Pasaportu ve VIP paket seçenekleri. Erken kayıt fırsatlarını kaçırmayın.">
+  <style>
+  /* Pulse animation for recommended badge */
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+    70%       { box-shadow: 0 0 0 8px rgba(201,168,76,0); }
+  }
+  .recommended-badge {
+    animation: pulse 2s infinite;
+  }
+
+  /* Workshop status badges */
+  .badge-full { background: #c0392b; color: #fff; padding: 0.2rem 0.7rem; border-radius: 2px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; display: inline-block; }
+  .badge-low  { background: #d35400; color: #fff; padding: 0.2rem 0.7rem; border-radius: 2px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; display: inline-block; }
+
+  .price-strikethrough { text-decoration: line-through; color: var(--text-secondary); }
+
+  /* Floating CTA (mobile only) */
+  @media (max-width: 768px) {
+    .floating-cta {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+      padding: 0.9rem 2rem;
+    }
+    body { padding-bottom: 80px; }
+  }
+  @media (min-width: 769px) {
+    .floating-cta { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .recommended-badge { animation: none; }
+  }
+
+  /* Pricing card icons & subtle pattern */
+  .pricing-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .pricing-card {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--bg-card, #1a1a1a),
+      var(--bg-card, #1a1a1a) 10px,
+      rgba(201,168,76,0.02) 10px,
+      rgba(201,168,76,0.02) 20px
+    );
+  }
+  .pricing-card.featured {
+    background: repeating-linear-gradient(
+      45deg,
+      #1a1a1a,
+      #1a1a1a 10px,
+      rgba(201,168,76,0.05) 10px,
+      rgba(201,168,76,0.05) 20px
+    );
+  }
+
+  /* Workshop table hover */
+  .workshop-table tbody tr {
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .workshop-table tbody tr:hover {
+    background: rgba(201,168,76,0.05);
+  }
+  .workshop-table tbody tr:hover td {
+    color: var(--text-primary, #f5f5f0);
+  }
+
+  /* Sold-out row */
+  tr.sold-out {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Price strikethrough */
+  .price-strikethrough {
+    text-decoration: line-through;
+    color: var(--text-secondary, #a0a0a0);
+  }
+
+  /* Floating CTA - mobile */
+  @media (max-width: 768px) {
+    .floating-cta {
+      border-radius: 2px;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      padding: 1rem 2rem;
+      animation: pulse 2s infinite;
+    }
+  }
+</style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">İDF 2025</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Ana Sayfa</a></li>
+        <li><a href="program.html">Program</a></li>
+        <li><a href="biletler.html" class="active">Biletler</a></li>
+        <li><a href="iletisim.html">İletişim</a></li>
+      </ul>
+      <div class="nav-toggle" onclick="toggleNav()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="container">
+      <span class="gold-line" style="margin:0 auto 1rem"></span>
+      <h1 class="section-title">Biletler</h1>
+      <p style="color:var(--text-secondary);font-size:1.05rem">İstanbul Dans Festivali 2025 · 15–22 Eylül</p>
+    </div>
+  </section>
+
+  <!-- COUNTDOWN -->
+  <section class="countdown-section" style="background:var(--bg-card);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color)">
+    <div class="container">
+      <p style="color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.2em;font-size:0.85rem;margin-bottom:1.5rem">Erken Kayıt Bitimine Kalan Süre</p>
+      <div class="countdown-grid">
+        <div class="countdown-item">
+          <span class="countdown-number" id="days">00</span>
+          <span class="countdown-label">Gün</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="hours">00</span>
+          <span class="countdown-label">Saat</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="minutes">00</span>
+          <span class="countdown-label">Dakika</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="seconds">00</span>
+          <span class="countdown-label">Saniye</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FİYAT KARTLARI -->
+  <section class="section">
+    <div class="container">
+      <span class="gold-line"></span>
+      <h2 class="section-title">Bilet Seçenekleri</h2>
+      <div class="grid-3" style="align-items:start;margin-top:2rem">
+
+        <!-- TEKİL -->
+        <div class="card pricing-card">
+          <span class="pricing-icon">🎟</span>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:0.5rem">Tekil Etkinlik</h3>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Seçtiğin etkinliğe özel giriş</p>
+          <div style="margin-bottom:0.5rem">
+            <span style="color:var(--text-secondary);font-size:0.9rem">başlangıç</span>
+          </div>
+          <div>
+            <span class="price-amount">350₺</span>
+          </div>
+          <ul class="price-features">
+            <li>1 etkinlik girişi</li>
+            <li>Seçime göre koltuk</li>
+            <li>Program kitabı</li>
+            <li style="color:var(--border-color)">Festival pasaportu yok</li>
+            <li style="color:var(--border-color)">VIP alan yok</li>
+          </ul>
+          <a href="#" class="btn btn-outline" style="width:100%;text-align:center;display:block">Bilet Al</a>
+        </div>
+
+        <!-- FESTIVAL PASAPORTU — ÖNERİLEN -->
+        <div class="card pricing-card featured" style="position:relative">
+          <div class="recommended-badge">Önerilen</div>
+          <span class="pricing-icon">🎭</span>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:0.5rem;margin-top:1rem">Festival Pasaportu</h3>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">8 günlük tüm etkinliklere sınırsız erişim</p>
+          <div>
+            <span class="price-amount">1.200₺</span>
+          </div>
+          <ul class="price-features">
+            <li>Tüm etkinliklere giriş</li>
+            <li>Öncelikli oturma</li>
+            <li>Program kitabı + poster</li>
+            <li>1 workshop dahil</li>
+            <li style="color:var(--border-color)">VIP alan yok</li>
+          </ul>
+          <a href="#" class="btn btn-primary" style="width:100%;text-align:center;display:block">Bilet Al</a>
+        </div>
+
+        <!-- VIP -->
+        <div class="card pricing-card">
+          <span class="pricing-icon">⭐</span>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:0.5rem">VIP Paket</h3>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Eksiksiz festival deneyimi</p>
+          <div>
+            <span class="price-amount">3.500₺</span>
+          </div>
+          <ul class="price-features">
+            <li>Tüm etkinliklere giriş</li>
+            <li>VIP oturma alanı</li>
+            <li>Özel karşılama kokteyli</li>
+            <li>Tüm workshoplar dahil</li>
+            <li>Sanatçı buluşması</li>
+          </ul>
+          <a href="#" class="btn btn-outline" style="width:100%;text-align:center;display:block">Bilet Al</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSHOP TABLOSU -->
+  <section class="section" style="background:var(--bg-card)">
+    <div class="container">
+      <span class="gold-line"></span>
+      <h2 class="section-title">Workshop Programı</h2>
+      <p style="color:var(--text-secondary);margin-bottom:2rem">Usta sanatçılardan özel dersler — Sınırlı kontenjan</p>
+      <div style="overflow-x:auto">
+        <table class="workshop-table">
+          <thead>
+            <tr>
+              <th>Workshop</th>
+              <th>Tarih & Saat</th>
+              <th>Eğitmen</th>
+              <th>Seviye</th>
+              <th>Fiyat</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sold-out">
+              <td>
+                <strong>Tango Temelleri</strong><br>
+                <span style="color:var(--text-secondary);font-size:0.85rem">3 saatlik yoğun workshop</span>
+              </td>
+              <td style="color:var(--text-secondary)">16 Eylül · 10:00–13:00</td>
+              <td>María Soledad</td>
+              <td><span style="background:rgba(201,168,76,0.15);color:var(--accent-gold);padding:0.2rem 0.7rem;border-radius:2px;font-size:0.8rem">Başlangıç</span></td>
+              <td style="color:var(--text-secondary)"><span class="price-strikethrough">400₺</span></td>
+              <td>
+                <span style="color:#c0392b;font-size:0.8rem;font-weight:600">Dolu</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Flamenko Palmas & Ritim</strong><br>
+                <span style="color:var(--text-secondary);font-size:0.85rem">El ritmi ve ayak vuruşları</span>
+              </td>
+              <td style="color:var(--text-secondary)">17 Eylül · 14:00–17:00</td>
+              <td>Rafael Domínguez</td>
+              <td><span style="background:rgba(201,168,76,0.15);color:var(--accent-gold);padding:0.2rem 0.7rem;border-radius:2px;font-size:0.8rem">Orta</span></td>
+              <td style="color:var(--accent-gold);font-weight:600">500₺</td>
+              <td><a href="#" class="btn btn-outline" style="padding:0.4rem 1rem;font-size:0.8rem">Kayıt</a></td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Salsa On2 — New York Style</strong><br>
+                <span style="color:var(--text-secondary);font-size:0.85rem">Salsa ve partner çalışması</span>
+              </td>
+              <td style="color:var(--text-secondary)">19 Eylül · 11:00–14:00</td>
+              <td>Carlos Méndez</td>
+              <td><span style="background:rgba(201,168,76,0.15);color:var(--accent-gold);padding:0.2rem 0.7rem;border-radius:2px;font-size:0.8rem">Orta-İleri</span></td>
+              <td style="color:var(--accent-gold);font-weight:600">450₺</td>
+              <td>
+                <span class="badge-low">Az Kaldı (3 yer)</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Zeybek Usul ve Figürleri</strong><br>
+                <span style="color:var(--text-secondary);font-size:0.85rem">Geleneksel zeybek teknikleri</span>
+              </td>
+              <td style="color:var(--text-secondary)">20 Eylül · 10:00–13:00</td>
+              <td>Ayşe Kara</td>
+              <td><span style="background:rgba(201,168,76,0.15);color:var(--accent-gold);padding:0.2rem 0.7rem;border-radius:2px;font-size:0.8rem">Tüm Seviyeler</span></td>
+              <td style="color:var(--accent-gold);font-weight:600">350₺</td>
+              <td><a href="#" class="btn btn-outline" style="padding:0.4rem 1rem;font-size:0.8rem">Kayıt</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRUP İNDİRİMİ -->
+  <section class="section">
+    <div class="container">
+      <span class="gold-line"></span>
+      <h2 class="section-title">Grup İndirimleri</h2>
+      <div class="grid-3" style="grid-template-columns:1fr 1fr">
+        <div class="discount-box">
+          <div class="discount-percent">%15</div>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;margin:0.5rem 0">Küçük Grup İndirimi</h3>
+          <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem">5–9 kişilik gruplara tüm bilet türlerinde %15 indirim uygulanır. Dans okulları ve dans dernekleri için özel fiyatlandırma mevcuttur.</p>
+          <a href="iletisim.html" class="btn btn-outline">Bilgi Al</a>
+        </div>
+        <div class="discount-box" style="border-color:var(--accent-gold)">
+          <div class="discount-percent">%25</div>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;margin:0.5rem 0">Büyük Grup İndirimi</h3>
+          <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem">10 ve üzeri kişilik gruplara %25 indirim ile özel VIP kontenjanı avantajı sunulmaktadır. Kurumsal rezervasyonlar için ayrı iletişim.</p>
+          <a href="iletisim.html" class="btn btn-primary">Hemen İletişim</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SSS ACCORDION -->
+  <section class="section" style="background:var(--bg-card)">
+    <div class="container">
+      <span class="gold-line"></span>
+      <h2 class="section-title">Sık Sorulan Sorular</h2>
+      <div style="max-width:800px;margin-top:2rem">
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <h4>Biletimi nasıl değiştirebilir veya iptal edebilirim?</h4>
+            <span class="accordion-icon">+</span>
+          </div>
+          <div class="accordion-body">
+            <p>Bilet değişikliği ve iade işlemleri, etkinlik tarihinden en az 7 gün öncesine kadar yapılabilmektedir. İptal taleplerinde bilet bedelinin %80'i iade edilir. Değişiklik talepleriniz için info@idf2025.com adresine e-posta gönderebilir ya da +90 212 555 0101 numaralı hattı arayabilirsiniz.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <h4>Festival Pasaportu ile tüm etkinliklere girebilir miyim?</h4>
+            <span class="accordion-icon">+</span>
+          </div>
+          <div class="accordion-body">
+            <p>Evet! Festival Pasaportu, 15–22 Eylül tarihleri arasında düzenlenen tüm ana sahne performanslarına sınırsız erişim sağlar. Workshoplara katılım için ayrıca kayıt yaptırmanız gerekmektedir; ancak Festival Pasaportu sahipleri ilk workshoptan ücretsiz yararlanabilir.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <h4>Mekanlar ulaşım açısından uygun mu?</h4>
+            <span class="accordion-icon">+</span>
+          </div>
+          <div class="accordion-body">
+            <p>Festival mekanları İstanbul'un merkezi konumlarında yer almaktadır: Zorlu PSM (Beşiktaş), Cemal Reşit Rey Salonu (Harbiye), Harbiye Açıkhava Tiyatrosu ve Feriye Sahnesi (Ortaköy). Tüm mekanlara metro, otobüs ve vapur hatlarıyla rahatlıkla ulaşılabilir. Mekan haritaları ve ulaşım bilgileri bilet onay e-postanızda yer alacaktır.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <h4>Öğrenci ve engelli indirimi var mı?</h4>
+            <span class="accordion-icon">+</span>
+          </div>
+          <div class="accordion-body">
+            <p>Geçerli öğrenci kimliği gösterilmesi halinde tüm bilet türlerinde %20 öğrenci indirimi uygulanmaktadır. Engelli bireyler ve refakatçileri için özel fiyatlandırma ve kolaylıklar mevcuttur. Detaylı bilgi için info@idf2025.com adresiyle iletişime geçebilirsiniz. 12 yaş altı çocuklar ebeveyn eşliğinde ücretsiz giriş yapabilir.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="footer-logo">İDF 2025</div>
+          <p>İstanbul Dans Festivali, dünyanın dört bir yanından dans sanatçılarını İstanbul'un kalbinde buluşturuyor.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Hızlı Bağlantılar</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Ana Sayfa</a></li>
+            <li><a href="program.html">Program</a></li>
+            <li><a href="biletler.html">Biletler</a></li>
+            <li><a href="iletisim.html">İletişim</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Festival</h4>
+          <ul class="footer-links">
+            <li><a href="#">Hakkımızda</a></li>
+            <li><a href="#">Sanatçılar</a></li>
+            <li><a href="#">Mekanlar</a></li>
+            <li><a href="#">Basın</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>İletişim</h4>
+          <ul class="footer-links">
+            <li><a href="#">info@idf2025.com</a></li>
+            <li><a href="#">+90 212 555 0101</a></li>
+            <li><a href="#">Beşiktaş, İstanbul</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 İstanbul Dans Festivali. Tüm hakları saklıdır.</p>
+        <p>Tasarım & Geliştirme: İDF Ekibi</p>
+      </div>
+    </div>
+  </footer>
+
+  <a href="#" class="btn btn-primary floating-cta">Festival Pasaportu Al — 1.200₺</a>
+
+  <script>
+    function toggleNav() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    }
+
+    window.addEventListener('scroll', () => {
+      document.querySelector('.navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Countdown — hedef: 1 Ağustos 2025
+    function updateCountdown() {
+      const target = new Date('2025-08-01T00:00:00');
+      const now = new Date();
+      const diff = target - now;
+      if (diff <= 0) {
+        document.getElementById('days').textContent = '00';
+        document.getElementById('hours').textContent = '00';
+        document.getElementById('minutes').textContent = '00';
+        document.getElementById('seconds').textContent = '00';
+        return;
+      }
+      const d = Math.floor(diff / (1000*60*60*24));
+      const h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+      const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+      const s = Math.floor((diff % (1000*60)) / 1000);
+      document.getElementById('days').textContent = String(d).padStart(2,'0');
+      document.getElementById('hours').textContent = String(h).padStart(2,'0');
+      document.getElementById('minutes').textContent = String(m).padStart(2,'0');
+      document.getElementById('seconds').textContent = String(s).padStart(2,'0');
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // Accordion toggle
+    function toggleAccordion(header) {
+      const body = header.nextElementSibling;
+      const icon = header.querySelector('.accordion-icon');
+      const isOpen = body.classList.contains('open');
+      document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
+      document.querySelectorAll('.accordion-icon').forEach(i => i.textContent = '+');
+      if (!isOpen) {
+        body.classList.add('open');
+        icon.textContent = '−';
+      }
+    }
+  </script>
+</body>
+</html>

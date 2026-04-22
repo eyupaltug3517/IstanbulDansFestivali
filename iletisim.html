@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İletişim — İstanbul Dans Festivali 2025</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="description" content="İstanbul Dans Festivali 2025 İletişim — Sorularınız, basın akreditasyonu ve grup rezervasyonları için bize ulaşın.">
+  <style>
+  .contact-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+  .contact-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    transition: border-color 0.3s;
+  }
+  .contact-info-item:hover { border-color: var(--accent-gold); }
+  .contact-info-icon { font-size: 1.3rem; flex-shrink: 0; }
+  @media (max-width: 768px) {
+    .contact-info-grid { grid-template-columns: 1fr; }
+  }
+  /* Form validation styles */
+  .form-group input.error,
+  .form-group textarea.error,
+  .form-group select.error {
+    border-color: #e74c3c !important;
+  }
+  .field-error {
+    color: #e74c3c;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    display: none;
+  }
+  .field-error.visible { display: block; }
+
+  /* Contact info hover */
+  .contact-info-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: default;
+  }
+  .contact-info-row:hover {
+    color: var(--accent-gold);
+    transform: translateX(4px);
+  }
+  .contact-info-row:hover p { color: var(--accent-gold); }
+
+  /* Map placeholder */
+  .map-placeholder {
+    background: var(--bg-card, #1a1a1a);
+    border: 1px solid var(--accent-gold, #c9a84c);
+    border-radius: 4px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .map-placeholder:hover {
+    background: rgba(201,168,76,0.05);
+    transform: translateY(-2px);
+  }
+  .map-placeholder .map-icon { font-size: 2.5rem; }
+  .map-placeholder p { color: var(--text-secondary); font-size: 0.9rem; }
+  .map-placeholder span { color: var(--accent-gold); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">İDF 2025</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Ana Sayfa</a></li>
+        <li><a href="program.html">Program</a></li>
+        <li><a href="biletler.html">Biletler</a></li>
+        <li><a href="iletisim.html" class="active">İletişim</a></li>
+      </ul>
+      <div class="nav-toggle" onclick="toggleNav()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <section class="page-hero">
+    <div class="container">
+      <span class="gold-line" style="margin:0 auto 1rem"></span>
+      <h1 class="section-title">İletişim</h1>
+      <p style="color:var(--text-secondary);font-size:1.05rem">Sorularınız için buradayız</p>
+    </div>
+  </section>
+
+  <!-- İLETİŞİM FORMU + BİLGİLER -->
+  <section class="section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:4rem">
+
+        <!-- FORM -->
+        <div>
+          <span class="gold-line"></span>
+          <h2 class="section-title" style="font-size:2rem">Bize Yazın</h2>
+          <p style="color:var(--text-secondary);margin-bottom:2rem;line-height:1.7">En kısa sürede size geri döneceğiz. Genellikle 24–48 saat içinde yanıt veriyoruz.</p>
+
+          <div id="form-success" class="form-success">
+            ✓ Mesajınız başarıyla iletildi! En kısa sürede size geri döneceğiz.
+          </div>
+
+          <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)" novalidate>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+              <div class="form-group">
+                <label for="firstName">Ad *</label>
+                <input type="text" id="firstName" name="firstName" placeholder="Adınız" required>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Soyad *</label>
+                <input type="text" id="lastName" name="lastName" placeholder="Soyadınız" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email">E-posta *</label>
+              <input type="email" id="email" name="email" placeholder="ornek@email.com" required>
+            </div>
+            <div class="form-group">
+              <label for="subject">Konu *</label>
+              <select id="subject" name="subject" required>
+                <option value="">Konu seçin...</option>
+                <option value="bilet">Bilet & Rezervasyon</option>
+                <option value="workshop">Workshop Kayıt</option>
+                <option value="basin">Basın & Medya</option>
+                <option value="akreditasyon">Akreditasyon</option>
+                <option value="sponsor">Sponsorluk</option>
+                <option value="genel">Genel Bilgi</option>
+                <option value="diger">Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="message">Mesaj *</label>
+              <textarea id="message" name="message" placeholder="Mesajınızı buraya yazın..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Mesaj Gönder</button>
+          </form>
+        </div>
+
+        <!-- BİLGİLER -->
+        <div>
+          <span class="gold-line"></span>
+          <h2 class="section-title" style="font-size:2rem">İletişim Bilgileri</h2>
+
+          <div class="contact-info-grid" style="margin-bottom:2rem">
+            <div class="contact-info-row">
+              <div style="background:rgba(201,168,76,0.1);border:1px solid var(--accent-gold);width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:2px;flex-shrink:0;font-size:1.2rem">📍</div>
+              <div>
+                <p style="color:var(--text-primary);font-weight:500;margin-bottom:0.2rem">Adres</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6">Sinanpaşa Mah. Çırağan Cd. No:42<br>Beşiktaş, İstanbul 34353</p>
+              </div>
+            </div>
+            <div class="contact-info-row">
+              <div style="background:rgba(201,168,76,0.1);border:1px solid var(--accent-gold);width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:2px;flex-shrink:0;font-size:1.2rem">📞</div>
+              <div>
+                <p style="color:var(--text-primary);font-weight:500;margin-bottom:0.2rem">Telefon</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem">+90 212 555 0101</p>
+                <p style="color:var(--text-secondary);font-size:0.85rem">Pzt–Cum, 09:00–18:00</p>
+              </div>
+            </div>
+            <div class="contact-info-row">
+              <div style="background:rgba(201,168,76,0.1);border:1px solid var(--accent-gold);width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:2px;flex-shrink:0;font-size:1.2rem">✉️</div>
+              <div>
+                <p style="color:var(--text-primary);font-weight:500;margin-bottom:0.2rem">E-posta</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem">info@idf2025.com</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem">basin@idf2025.com (Basın)</p>
+              </div>
+            </div>
+            <div class="contact-info-row">
+              <div style="background:rgba(201,168,76,0.1);border:1px solid var(--accent-gold);width:45px;height:45px;display:flex;align-items:center;justify-content:center;border-radius:2px;flex-shrink:0;font-size:1.2rem">🕐</div>
+              <div>
+                <p style="color:var(--text-primary);font-weight:500;margin-bottom:0.2rem">Çalışma Saatleri</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem">Pazartesi – Cuma: 09:00 – 18:00</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem">Cumartesi: 10:00 – 15:00</p>
+                <p style="color:var(--text-secondary);font-size:0.9rem">Pazar: Kapalı</p>
+              </div>
+            </div>
+          </div>
+
+          <a href="https://maps.google.com/?q=Harbiye+Istanbul" target="_blank" rel="noopener" style="text-decoration:none;display:block;margin-top:2rem">
+            <div style="width:100%;height:280px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;cursor:pointer;transition:border-color 0.3s" onmouseover="this.style.borderColor='var(--accent-gold)'" onmouseout="this.style.borderColor='var(--border-color)'">
+              <div style="font-size:2.5rem">📍</div>
+              <p style="color:var(--text-secondary);font-size:0.9rem;margin:0">Haritada Gör</p>
+              <p style="color:var(--accent-gold);font-family:'Playfair Display',serif;font-size:1rem;margin:0">Harbiye, Cumhuriyet Cd. İstanbul</p>
+              <p style="color:var(--text-secondary);font-size:0.8rem;margin:0;text-transform:uppercase;letter-spacing:0.1em">Google Maps'te Aç →</p>
+            </div>
+          </a>
+
+          <!-- SOSYAL MEDYA -->
+          <div>
+            <p style="color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.1em;font-size:0.8rem;margin-bottom:1rem">Sosyal Medya</p>
+            <div class="social-links">
+              <a href="#" class="social-link" title="Instagram">📷</a>
+              <a href="#" class="social-link" title="Facebook">f</a>
+              <a href="#" class="social-link" title="YouTube">▶</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BASIN & AKREDİTASYON -->
+  <section class="section" style="background:var(--bg-card)">
+    <div class="container">
+      <span class="gold-line"></span>
+      <h2 class="section-title">Basın & Akreditasyon</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem">
+        <div class="card">
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:1rem;color:var(--accent-gold)">Basın Bültenleri</h3>
+          <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem">Festival hakkında basın bültenleri, fotoğraf arşivi ve görsel materyallere erişmek için basın ekibimizle iletişime geçin.</p>
+          <ul style="list-style:none;margin-bottom:1.5rem">
+            <li style="color:var(--text-secondary);font-size:0.9rem;padding:0.4rem 0;border-bottom:1px solid var(--border-color)">📄 Festival Basın Kiti (PDF)</li>
+            <li style="color:var(--text-secondary);font-size:0.9rem;padding:0.4rem 0;border-bottom:1px solid var(--border-color)">🖼 Yüksek Çözünürlüklü Fotoğraflar</li>
+            <li style="color:var(--text-secondary);font-size:0.9rem;padding:0.4rem 0">🎥 Tanıtım Videoları</li>
+          </ul>
+          <a href="mailto:basin@idf2025.com" class="btn btn-outline">basin@idf2025.com</a>
+        </div>
+        <div class="card">
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:1rem;color:var(--accent-gold)">Akreditasyon Başvurusu</h3>
+          <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem">Gazeteciler, fotoğrafçılar ve video yayıncıları için festival akreditasyonu başvuruları 1 Eylül 2025 tarihine kadar kabul edilmektedir.</p>
+          <ul style="list-style:none;margin-bottom:1.5rem">
+            <li style="color:var(--text-secondary);font-size:0.9rem;padding:0.4rem 0;border-bottom:1px solid var(--border-color)">✓ Tüm etkinliklere basın girişi</li>
+            <li style="color:var(--text-secondary);font-size:0.9rem;padding:0.4rem 0;border-bottom:1px solid var(--border-color)">✓ Sahne önü fotoğraf alanı</li>
+            <li style="color:var(--text-secondary);font-size:0.9rem;padding:0.4rem 0">✓ Sanatçı röportaj fırsatı</li>
+          </ul>
+          <a href="#" onclick="document.getElementById('subject').value='akreditasyon';document.getElementById('contactForm').scrollIntoView({behavior:'smooth'});return false;" class="btn btn-primary">Başvuru Formu</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="footer-logo">İDF 2025</div>
+          <p>İstanbul Dans Festivali, dünyanın dört bir yanından dans sanatçılarını İstanbul'un kalbinde buluşturuyor.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Hızlı Bağlantılar</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Ana Sayfa</a></li>
+            <li><a href="program.html">Program</a></li>
+            <li><a href="biletler.html">Biletler</a></li>
+            <li><a href="iletisim.html">İletişim</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Festival</h4>
+          <ul class="footer-links">
+            <li><a href="#">Hakkımızda</a></li>
+            <li><a href="#">Sanatçılar</a></li>
+            <li><a href="#">Mekanlar</a></li>
+            <li><a href="#">Basın</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>İletişim</h4>
+          <ul class="footer-links">
+            <li><a href="#">info@idf2025.com</a></li>
+            <li><a href="#">+90 212 555 0101</a></li>
+            <li><a href="#">Beşiktaş, İstanbul</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 İstanbul Dans Festivali. Tüm hakları saklıdır.</p>
+        <p>Tasarım & Geliştirme: İDF Ekibi</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  function toggleNav() {
+    document.querySelector('.nav-links').classList.toggle('active');
+  }
+
+  window.addEventListener('scroll', () => {
+    document.querySelector('.navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  function showError(inputEl, msg) {
+    inputEl.classList.add('error');
+    let errEl = inputEl.parentElement.querySelector('.field-error');
+    if (!errEl) {
+      errEl = document.createElement('span');
+      errEl.className = 'field-error';
+      inputEl.parentElement.appendChild(errEl);
+    }
+    errEl.textContent = msg;
+    errEl.classList.add('visible');
+  }
+
+  function clearError(inputEl) {
+    inputEl.classList.remove('error');
+    const errEl = inputEl.parentElement.querySelector('.field-error');
+    if (errEl) errEl.classList.remove('visible');
+  }
+
+  // Clear errors on input
+  document.querySelectorAll('input, textarea, select').forEach(el => {
+    el.addEventListener('input', () => clearError(el));
+    el.addEventListener('change', () => clearError(el));
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    let valid = true;
+
+    const firstName = form.firstName;
+    const lastName  = form.lastName;
+    const email     = form.email;
+    const subject   = form.subject;
+    const message   = form.message;
+
+    if (!firstName.value.trim()) { showError(firstName, 'Ad alanı zorunludur.'); valid = false; }
+    if (!lastName.value.trim())  { showError(lastName, 'Soyad alanı zorunludur.'); valid = false; }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.value.trim()) {
+      showError(email, 'E-posta alanı zorunludur.'); valid = false;
+    } else if (!emailRegex.test(email.value.trim())) {
+      showError(email, 'Geçerli bir e-posta adresi girin.'); valid = false;
+    }
+
+    if (!subject.value) { showError(subject, 'Lütfen bir konu seçin.'); valid = false; }
+    if (!message.value.trim()) { showError(message, 'Mesaj alanı zorunludur.'); valid = false; }
+
+    if (!valid) return;
+
+    form.style.display = 'none';
+    const successEl = document.getElementById('form-success');
+    successEl.style.animation = 'none';
+    successEl.offsetHeight; // reflow trigger
+    successEl.style.animation = 'fadeUp 0.5s ease both';
+    successEl.classList.add('visible');
+    successEl.textContent = `✓ Teşekkürler ${firstName.value.trim()}! Mesajınız alındı. En kısa sürede size geri döneceğiz.`;
+    setTimeout(() => {
+      window.scrollTo({ top: successEl.offsetTop - 100, behavior: 'smooth' });
+    }, 100);
+  }
+</script>
+</body>
+</html>
