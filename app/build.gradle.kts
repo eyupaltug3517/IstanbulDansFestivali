@@ -13,8 +13,8 @@ android {
         applicationId = "com.nesemu"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
     }
 
     // Release signing key is kept out of git. Create keystore.properties
@@ -50,10 +50,12 @@ android {
         jvmTarget = "17"
     }
     testOptions {
-        unitTests.all { it.maxHeapSize = "1g" }
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all { it.maxHeapSize = "2g" }
     }
 }
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
 }

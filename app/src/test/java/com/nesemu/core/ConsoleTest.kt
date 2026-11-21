@@ -106,4 +106,26 @@ class ConsoleTest {
         assertEquals(a.cpu.pc, b.cpu.pc)
         assertEquals(a.cpu.cycles, b.cpu.cycles)
     }
+
+    @Test
+    fun gameGenieDecoding() {
+        // Reference values from the NESdev wiki Game Genie article.
+        val six = Cheat.parse("GOSSIP")!!
+        assertEquals(0xD1DD, six.address); assertEquals(0x14, six.value); assertEquals(-1, six.compare)
+        val ram = Cheat.parse("075a:09")!!
+        assertTrue(ram.ram); assertEquals(0x075A, ram.address); assertEquals(9, ram.value)
+        assertEquals(null, Cheat.parse("HELLO!"))
+        assertEquals(8, Cheat.parse("ZEXPYGLA")!!.code.length)
+    }
+
+    @Test
+    fun stateSizeIsSmallEnoughForRewind() {
+        val rom = rom("official_only.nes")
+        assumeTrue(rom != null)
+        val nes = Console(rom!!)
+        repeat(10) { nes.stepFrame() }
+        val size = nes.saveState().size
+        println("state size = $size")
+        assertTrue(size < 64 * 1024)
+    }
 }

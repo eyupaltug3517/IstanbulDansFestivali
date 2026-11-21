@@ -1,6 +1,6 @@
-# NES Emülatörü (Android)
+# Retro Salon (Android)
 
-Sıfırdan Kotlin ile yazılmış, Android'de çalışan bir NES emülatörü.
+Eski oyun severler için sıfırdan Kotlin ile yazılmış bir NES emülatörü.
 
 ## Özellikler
 - **CPU:** 6502 (resmi + gizli komutlar), nestest ve blargg testlerini geçiyor
@@ -9,7 +9,11 @@ Sıfırdan Kotlin ile yazılmış, Android'de çalışan bir NES emülatörü.
 - **Mapper'lar:** 0 (NROM), 1 (MMC1), 2 (UxROM), 3 (CNROM), 4 (MMC3), 7 (AxROM), 11, 66
 - **Dokunmatik kumanda:** 8 yönlü yön tuşu, A, B, Start, Select (çoklu dokunma, titreşim)
 - **Kayıt:** 4 slot anlık kayıt (save state) + pilli kartuş kayıtları (ör. Zelda) otomatik
-- Dikey ve yatay ekran, Bluetooth/USB gamepad ve klavye desteği
+- **Kütüphane:** otomatik ekran görüntüsü kapaklar, arama, favoriler, oynama süresi, "kaldığın yerden devam"
+- **Oyun içi:** turbo A/B, hızlı ileri sarma (2-4x), geri sarma (~12 sn), Game Genie ve RAM hile kodları
+- **Görüntü:** keskin piksel, CRT tarama çizgileri veya yumuşak filtre; ayarlanabilir kumanda boyutu/saydamlığı
+- .zip içinden ve çoklu dosya seçerek oyun ekleme, dosya yöneticisinden "Birlikte aç"
+- Dikey ve yatay ekran, Bluetooth/USB gamepad (L1 geri sar, R1 hızlı ileri) ve klavye desteği
 
 ## Kurulum
 1. `app-release.apk` dosyasını telefona indir.

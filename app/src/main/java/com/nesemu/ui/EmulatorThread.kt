@@ -3,12 +3,14 @@ package com.nesemu.ui
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import com.nesemu.core.Buttons
 import com.nesemu.core.Console
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Runs the console at 60 fps. With sound on, blocking AudioTrack writes pace the
- * emulation, which keeps audio and video in sync without drift.
+ * emulation, which keeps audio and video in sync without drift. Also handles
+ * turbo buttons, fast-forward and rewind.
  */
 class EmulatorThread(
     private val console: Console,
@@ -17,8 +19,23 @@ class EmulatorThread(
     @Volatile var running = true
     @Volatile var paused = false
     @Volatile var soundOn = true
+
+    /** Regular buttons held on the pad (see [Buttons]). */
+    @Volatile var held = 0
+    /** Buttons that auto-fire while held. */
+    @Volatile var turbo = 0
+    @Volatile var fastForward = false
+    @Volatile var fastSpeed = 3
+    @Volatile var rewinding = false
+
+    /** Frames actually emulated while not paused, for play-time statistics. */
+    @Volatile var framesPlayed = 0L
+        private set
+
+    private val rewind = RewindBuffer(capacity = 360) // ~12 s at one snapshot per 2 frames
     private val tasks = ConcurrentLinkedQueue<Runnable>()
     private val lock = Object()
+    private var frameIndex = 0L
 
     /** Runs [task] on the emulation thread between two frames. */
     fun post(task: Runnable) {
@@ -31,10 +48,23 @@ class EmulatorThread(
         synchronized(lock) { lock.notifyAll() }
     }
 
+    /** Forget rewind history, e.g. after loading a save. Must run on this thread. */
+    fun clearRewind() = rewind.clear()
+
     fun shutdown() {
         running = false
         synchronized(lock) { lock.notifyAll() }
-        join(1000)
+        join(2000)
+    }
+
+    private fun runTasks() {
+        while (true) tasks.poll()?.run() ?: break
+    }
+
+    private fun applyInput() {
+        // Turbo fires at 15 Hz: 2 frames pressed, 2 frames released.
+        val turboOn = (frameIndex shr 1) and 1L == 0L
+        console.buttons1 = held or (if (turboOn) turbo else 0)
     }
 
     override fun run() {
@@ -45,17 +75,40 @@ class EmulatorThread(
         var playing = false
         try {
             while (running) {
-                while (true) tasks.poll()?.run() ?: break
+                runTasks()
                 if (paused) {
                     if (playing) { track.pause(); track.flush(); playing = false }
                     synchronized(lock) { if (paused && running && tasks.isEmpty()) lock.wait(100) }
                     next = System.nanoTime()
                     continue
                 }
-                console.stepFrame()
+
+                var useAudio = soundOn
+                if (rewinding) {
+                    useAudio = false
+                    val state = rewind.pop()
+                    if (state != null) {
+                        console.loadState(state)
+                        applyInput()
+                        console.stepFrame()
+                    }
+                    console.apu.drainSamples(samples)
+                } else {
+                    val steps = if (fastForward) fastSpeed else 1
+                    if (fastForward) useAudio = false
+                    for (i in 0 until steps) {
+                        if (frameIndex and 1L == 0L) rewind.push(console.saveState())
+                        applyInput()
+                        console.stepFrame()
+                        frameIndex++
+                        framesPlayed++
+                        if (i < steps - 1) console.apu.drainSamples(samples)
+                    }
+                }
                 view.drawFrame(console.ppu.frame)
+
                 val n = console.apu.drainSamples(samples)
-                if (soundOn) {
+                if (useAudio) {
                     if (!playing) { track.play(); playing = true }
                     track.write(samples, 0, n) // blocks when the buffer is full
                     next = System.nanoTime()
@@ -69,6 +122,7 @@ class EmulatorThread(
             }
         } catch (_: InterruptedException) {
         } finally {
+            runTasks() // let pending saves finish
             track.release()
         }
     }
@@ -100,5 +154,30 @@ class EmulatorThread(
 
     companion object {
         const val SAMPLE_RATE = 44100
+    }
+}
+
+/** Fixed-size ring of save states, newest last. */
+class RewindBuffer(private val capacity: Int) {
+    private val states = arrayOfNulls<ByteArray>(capacity)
+    private var start = 0
+    private var size = 0
+
+    fun push(state: ByteArray) {
+        val idx = (start + size) % capacity
+        states[idx] = state
+        if (size < capacity) size++ else start = (start + 1) % capacity
+    }
+
+    fun pop(): ByteArray? {
+        if (size == 0) return null
+        size--
+        val idx = (start + size) % capacity
+        return states[idx].also { states[idx] = null }
+    }
+
+    fun clear() {
+        states.fill(null)
+        start = 0; size = 0
     }
 }

@@ -41,8 +41,27 @@ class Console(romData: ByteArray, sampleRate: Int = 44100) : CpuBus {
         apu.writeRegister(0x4015, 0)
     }
 
+    // Cheats: ROM patches (Game Genie) are looked up per address; RAM codes are applied every frame.
+    private val romPatchValue = IntArray(0x8000) { -1 }
+    private val romPatchCompare = IntArray(0x8000) { -1 }
+    private var romPatches = 0
+    private var ramCheats: List<Cheat> = emptyList()
+
+    fun setCheats(cheats: List<Cheat>) {
+        romPatchValue.fill(-1)
+        romPatchCompare.fill(-1)
+        romPatches = 0
+        for (c in cheats.filter { !it.ram }) {
+            romPatchValue[c.address - 0x8000] = c.value
+            romPatchCompare[c.address - 0x8000] = c.compare
+            romPatches++
+        }
+        ramCheats = cheats.filter { it.ram }
+    }
+
     /** Runs the emulation until the PPU has produced a full frame. */
     fun stepFrame() {
+        for (c in ramCheats) write(c.address, c.value)
         ppu.frameComplete = false
         while (!ppu.frameComplete) stepInstruction()
     }
@@ -63,7 +82,16 @@ class Console(romData: ByteArray, sampleRate: Int = 44100) : CpuBus {
         addr == 0x4016 -> readController(1)
         addr == 0x4017 -> readController(2)
         addr < 0x4020 -> 0
+        addr >= 0x8000 && romPatches > 0 -> patchedRead(addr)
         else -> mapper.cpuRead(addr)
+    }
+
+    private fun patchedRead(addr: Int): Int {
+        val original = mapper.cpuRead(addr)
+        val patch = romPatchValue[addr - 0x8000]
+        if (patch < 0) return original
+        val compare = romPatchCompare[addr - 0x8000]
+        return if (compare < 0 || compare == original) patch else original
     }
 
     override fun write(addr: Int, value: Int) {
