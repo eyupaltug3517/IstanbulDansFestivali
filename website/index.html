@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Retro Salon</title>
+<meta name="description" content="Retro Salon: Android için NES emülatörü. Arkadaşınla online oyna, geri sar, CRT filtresiyle eski günleri yaşa. Reklamsız, hesapsız.">
+<meta property="og:title" content="Retro Salon — Cebindeki retro oyun salonu">
+<meta property="og:description" content="Android için NES emülatörü: online 2 kişilik oyun, geri sarma, turbo tuşlar, CRT filtresi.">
+<meta property="og:image" content="/assets/og.png">
+<meta name="theme-color" content="#0d0d14">
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: arcade cabinet — a marquee hero with phone "screens", then a single column of rooms in the salon. */
+:root {
+  --bg: #0d0d14;
+  --surface: #1a1a26;
+  --surface-hi: #262636;
+  --line: #2f2f44;
+  --text: #f0f0f8;
+  --dim: #9a9ab4;
+  --red: #e63946;
+  --gold: #ffc400;
+  --green: #50c878;
+  --font-display: "Pixelify Sans", "Courier New", monospace;
+  --font-body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 18px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 17px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+/* faint CRT scanlines over the whole page */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.12) 2px 3px);
+}
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+.wrap {
+  max-width: 1120px; margin: 0 auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.1; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(30px, 4.6vw, 46px); }
+h3 { font-size: 22px; }
+p { margin: 0; }
+.eyebrow {
+  font-family: var(--font-display); font-size: 15px; letter-spacing: .14em; color: var(--gold); text-transform: uppercase;
+}
+.lead { color: var(--dim); font-size: 19px; max-width: 60ch; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+
+/* ---- Header ---- */
+header.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: rgba(13, 13, 20, .86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+header.top .wrap { display: flex; align-items: center; gap: 24px; padding-block: 12px; }
+.logo { font-family: var(--font-display); font-size: 22px; line-height: .95; text-decoration: none; letter-spacing: .06em; }
+.logo span { display: block; }
+.logo .r { color: var(--red); } .logo .s { color: var(--gold); }
+nav.links { display: flex; gap: 22px; margin-left: auto; font-weight: 500; font-size: 15px; }
+nav.links a { text-decoration: none; color: var(--dim); }
+nav.links a:hover { color: var(--text); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 24px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none;
+  border: 2px solid transparent; transition: transform .15s ease, background .15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-red { background: var(--red); color: #fff; box-shadow: 0 6px 0 #8f1d27; }
+.btn-red:active { transform: translateY(3px); box-shadow: 0 3px 0 #8f1d27; }
+.btn-ghost { border-color: var(--line); color: var(--text); background: var(--surface); }
+.btn-small { padding: 9px 16px; font-size: 14px; box-shadow: 0 4px 0 #8f1d27; }
+@media (max-width: 760px) { nav.links { display: none; } header.top .btn-small { margin-left: auto; } }
+
+/* ---- Hero ---- */
+.hero { padding-block: 64px 40px; position: relative; overflow: hidden; }
+.hero::before {
+  content: ""; position: absolute; inset: auto -10% -40% -10%; height: 70%;
+  background: radial-gradient(60% 60% at 70% 30%, rgba(230,57,70,.28), transparent 70%),
+              radial-gradient(40% 50% at 20% 60%, rgba(255,196,0,.12), transparent 70%);
+  pointer-events: none;
+}
+.hero .wrap { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; position: relative; }
+.hero h1 { font-size: clamp(44px, 7vw, 82px); margin-top: 14px; }
+.hero h1 em { font-style: normal; color: var(--gold); }
+.hero .lead { margin-top: 20px; }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; align-items: center; }
+.soon {
+  display: inline-flex; flex-direction: column; line-height: 1.15; padding: 9px 18px; border-radius: 12px;
+  border: 1px dashed var(--line); color: var(--dim); font-size: 13px;
+}
+.soon b { color: var(--text); font-size: 16px; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; padding: 0; list-style: none; }
+.facts li {
+  font-size: 14px; color: var(--dim); background: var(--surface); border: 1px solid var(--line);
+  padding: 6px 12px; border-radius: 999px;
+}
+.facts b { color: var(--text); font-weight: 500; }
+.stage { position: relative; height: 560px; }
+.phone {
+  position: absolute; width: 250px; border-radius: 34px; padding: 10px; background: #050508;
+  border: 2px solid #34344a; box-shadow: 0 30px 60px rgba(0,0,0,.55), 0 0 0 6px #14141e;
+}
+.phone img { border-radius: 25px; width: 100%; height: auto; aspect-ratio: 1233 / 2673; object-fit: cover; background: #000; }
+.stage .p1 { right: 160px; top: 10px; transform: rotate(-5deg); z-index: 2; }
+.stage .p2 { right: 0; top: 70px; transform: rotate(6deg); }
+.stage .chip {
+  position: absolute; z-index: 3; font-family: var(--font-display); font-size: 15px; padding: 8px 14px; border-radius: 12px;
+  background: var(--gold); color: #1a1400; box-shadow: 0 6px 0 #8a6a00;
+}
+.stage .c1 { left: 0; top: 120px; transform: rotate(-4deg); }
+.stage .c2 { right: 10px; bottom: 30px; background: var(--red); color: #fff; box-shadow: 0 6px 0 #8f1d27; transform: rotate(3deg); }
+@media (max-width: 900px) {
+  .hero .wrap { grid-template-columns: 1fr; }
+  .stage { height: 470px; max-width: 420px; width: 100%; margin: 0 auto; }
+  .phone { width: 205px; }
+  .stage .p1 { right: auto; left: 0; }
+  .stage .p2 { right: 0; }
+  .stage .c1 { left: auto; right: 0; top: 0; }
+}
+
+/* ---- Ticker ---- */
+.ticker { border-block: 2px solid var(--line); background: var(--surface); overflow: hidden; white-space: nowrap; }
+.ticker .track { display: inline-flex; gap: 48px; padding-block: 14px; animation: scroll 38s linear infinite; font-family: var(--font-display); font-size: 18px; }
+.ticker .track span::before { content: "■"; color: var(--red); margin-right: 14px; font-size: 12px; vertical-align: 2px; }
+@keyframes scroll { to { transform: translateX(-50%); } }
+
+/* ---- Sections ---- */
+section.room { padding-block: 88px; }
+section.room .head { display: grid; gap: 14px; margin-bottom: 44px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.feature { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.feature h3 { font-size: 21px; }
+.feature p { color: var(--dim); font-size: 15.5px; }
+.pix { width: 40px; height: 40px; image-rendering: pixelated; }
+
+/* online */
+.online { display: grid; grid-template-columns: 1fr 320px; gap: 56px; align-items: center; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0; }
+.steps li::before {
+  counter-increment: s; content: counter(s);
+  font-family: var(--font-display); font-size: 28px; color: #1a1400; background: var(--gold); border-radius: 12px;
+  display: grid; place-items: center; height: 56px; box-shadow: 0 5px 0 #8a6a00;
+}
+.steps h3 { font-size: 20px; margin-bottom: 4px; }
+.steps p { color: var(--dim); font-size: 15.5px; }
+.note { margin-top: 20px; padding: 16px 18px; border-left: 4px solid var(--green); background: rgba(80,200,120,.08); border-radius: 0 12px 12px 0; color: var(--text); font-size: 15.5px; }
+.online .phone { position: relative; width: 100%; max-width: 300px; margin: 0 auto; transform: rotate(2deg); }
+@media (max-width: 860px) { .online { grid-template-columns: 1fr; } }
+
+/* gallery */
+.gallery { display: flex; gap: 22px; overflow-x: auto; padding: 10px 4px 26px; scroll-snap-type: x mandatory; }
+.gallery figure { margin: 0; flex: 0 0 auto; scroll-snap-align: start; display: grid; gap: 12px; }
+.gallery .phone { position: relative; width: 230px; }
+.gallery .land { width: min(560px, 82vw); border-radius: 28px; padding: 10px; background: #050508; border: 2px solid #34344a; box-shadow: 0 0 0 6px #14141e; }
+.gallery .land img { border-radius: 20px; aspect-ratio: 2673 / 1233; width: 100%; height: auto; object-fit: cover; }
+.gallery figcaption { color: var(--dim); font-size: 14px; text-align: center; }
+
+/* specs */
+.specs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.spec { padding: 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.spec dt { font-family: var(--font-display); color: var(--gold); font-size: 15px; letter-spacing: .08em; }
+.spec dd { margin: 8px 0 0; font-size: 15.5px; color: var(--dim); }
+.spec dd b { display: block; color: var(--text); font-size: 26px; font-family: var(--font-display); font-weight: 500; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 860px) { .specs { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .specs { grid-template-columns: 1fr; } }
+
+/* faq */
+.faq { display: grid; gap: 12px; max-width: 800px; }
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 20px; }
+.faq summary { cursor: pointer; font-weight: 700; padding-block: 14px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-family: var(--font-display); color: var(--gold); font-size: 22px; line-height: 1; }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { color: var(--dim); padding-bottom: 16px; font-size: 16px; }
+
+/* final cta */
+.final { text-align: center; padding-block: 90px; background: linear-gradient(180deg, transparent, rgba(230,57,70,.12)); border-top: 1px solid var(--line); }
+.final h2 { font-size: clamp(34px, 6vw, 60px); }
+.final .cta { justify-content: center; }
+.final .insert { font-family: var(--font-display); color: var(--gold); font-size: 20px; margin-top: 18px; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+footer { border-top: 1px solid var(--line); padding-block: 30px; color: var(--dim); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 28px; justify-content: space-between; }
+footer a { color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker .track, .final .insert { animation: none; }
+  html { scroll-behavior: auto; }
+  .btn:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="Retro Salon ana sayfa"><span class="r">RETRO</span><span class="s">SALON</span></a>
+    <nav class="links" aria-label="Bölümler">
+      <a href="#ozellikler">Özellikler</a>
+      <a href="#online">Online</a>
+      <a href="#ekranlar">Ekranlar</a>
+      <a href="#sss">SSS</a>
+    </nav>
+    <a class="btn btn-red btn-small" href="/indir/retro-salon.apk">İndir</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Android için NES emülatörü</p>
+        <h1>Cebindeki retro <em>oyun salonu</em></h1>
+        <p class="lead">Çocukluğunun 8-bit oyunlarını telefonunda oyna. Kaldığın yerden devam et, ölünce geri sar, arkadaşınla internetten birlikte oyna. Reklam yok, hesap yok.</p>
+        <div class="cta">
+          <a class="btn btn-red" href="/indir/retro-salon.apk">APK'yı indir · 1,1 MB</a>
+          <span class="soon"><span>Çok yakında</span><b>Google Play'de</b></span>
+        </div>
+        <ul class="facts">
+          <li><b>60 FPS</b> akıcı oyun</li>
+          <li><b>2 kişi</b> online</li>
+          <li><b>12 sn</b> geri sarma</li>
+          <li><b>%0</b> reklam</li>
+        </ul>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <div class="phone p1"><img src="/assets/game.webp" alt="" width="540" height="1171"></div>
+        <div class="phone p2"><img src="/assets/library.webp" alt="" width="540" height="1171"></div>
+        <span class="chip c1">◀◀ GERİ SAR</span>
+        <span class="chip c2">2P ONLINE</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="track">
+      <span>Turbo A/B</span><span>4 kayıt slotu</span><span>CRT tarama çizgileri</span><span>Game Genie kodları</span><span>Bluetooth gamepad</span><span>Kaldığın yerden devam</span><span>Hızlı ileri sarma 4x</span><span>Oda kodu ile online</span>
+      <span>Turbo A/B</span><span>4 kayıt slotu</span><span>CRT tarama çizgileri</span><span>Game Genie kodları</span><span>Bluetooth gamepad</span><span>Kaldığın yerden devam</span><span>Hızlı ileri sarma 4x</span><span>Oda kodu ile online</span>
+    </div>
+  </div>
+
+  <section class="room" id="ozellikler">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Salonda neler var</p>
+        <h2>Eski oyunlar, yeni konfor</h2>
+        <p class="lead">O zamanlar olmayan her şey burada: kaydet, geri sar, hızlandır. Oyunun ruhuna dokunmadan.</p>
+      </div>
+      <div class="grid">
+        <article class="feature"><svg class="pix" data-icon="online" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Online 2 kişi</h3><p>Odayı kur, 4 haneli kodu arkadaşına at. O 2. oyuncu olur, sen 1. oyuncu. İkiniz de oyunu net görürsünüz.</p></article>
+        <article class="feature"><svg class="pix" data-icon="rewind" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Geri sarma</h3><p>Çukura mı düştün? Tuşu basılı tut, son 12 saniyeyi geri al ve tekrar dene.</p></article>
+        <article class="feature"><svg class="pix" data-icon="save" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Kayıt slotları</h3><p>Her oyun için 4 slot, her birinde o anın ekran görüntüsü. Oyunu kapatınca otomatik kaydedilir.</p></article>
+        <article class="feature"><svg class="pix" data-icon="turbo" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Turbo tuşlar</h3><p>Turbo A ve Turbo B saniyede 15 kez basar. Ateş etmek için parmağını yormana gerek yok.</p></article>
+        <article class="feature"><svg class="pix" data-icon="crt" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>CRT filtresi</h3><p>Tüplü televizyonun tarama çizgileri, keskin pikseller ya da yumuşak görüntü. Seçim senin.</p></article>
+        <article class="feature"><svg class="pix" data-icon="fast" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Hızlı ileri sarma</h3><p>Uzun diyalogları ve ara sahneleri 2x, 3x ya da 4x hızla geç.</p></article>
+        <article class="feature"><svg class="pix" data-icon="code" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Hile kodları</h3><p>Game Genie kodlarını ve RAM kodlarını gir, tek dokunuşla aç kapat.</p></article>
+        <article class="feature"><svg class="pix" data-icon="pad" viewBox="0 0 10 10" role="img" aria-label=""></svg><h3>Gamepad desteği</h3><p>Bluetooth ya da USB kumanda bağla. L1 geri sarar, R1 hızlandırır.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="room" id="online" style="background: var(--surface); border-block: 1px solid var(--line);">
+    <div class="wrap online">
+      <div>
+        <div class="head">
+          <p class="eyebrow">Online oyun</p>
+          <h2>Kanepe aynı, sadece arada kilometreler var</h2>
+        </div>
+        <ol class="steps">
+          <li><div><h3>Oda kur</h3><p>Online ekranından oynayacağınız oyunu seç. Sana 4 haneli bir oda kodu verilir.</p></div></li>
+          <li><div><h3>Kodu paylaş</h3><p>"Kodu Paylaş" ile WhatsApp'tan gönder. Arkadaşın "Odaya Katıl" deyip kodu girer.</p></div></li>
+          <li><div><h3>Birlikte oyna</h3><p>Oyun iki telefonda aynı anda başlar. Ekranın üstünde oda kodu ve ping görünür.</p></div></li>
+        </ol>
+        <p class="note">Görüntü yayını yapılmaz: telefonlar arasında sadece tuş basışları gider. Bu yüzden görüntü iki tarafta da net kalır ve mobil veriyi neredeyse hiç harcamaz.</p>
+      </div>
+      <div class="phone"><img src="/assets/online_room.webp" alt="Oda kodu 4829 olan online oda ekranı" width="540" height="1171" loading="lazy"></div>
+    </div>
+  </section>
+
+  <section class="room" id="ekranlar">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Ekranlar</p>
+        <h2>Bir tur at</h2>
+        <p class="lead">Görsellerdeki oyunlar tanıtım için çizilmiş örnek sahnelerdir.</p>
+      </div>
+      <div class="gallery" tabindex="0" aria-label="Uygulama ekran görüntüleri, yana kaydır">
+        <figure><div class="phone"><img src="/assets/library.webp" alt="Oyun kütüphanesi: kapak kartları, arama ve favoriler" width="540" height="1171" loading="lazy"></div><figcaption>Kütüphane</figcaption></figure>
+        <figure><div class="phone"><img src="/assets/game.webp" alt="Dikey ekranda oyun ve dokunmatik kumanda" width="540" height="1171" loading="lazy"></div><figcaption>Dokunmatik kumanda</figcaption></figure>
+        <figure><div class="land"><img src="/assets/game_landscape.webp" alt="Yatay ekranda 3x hızlı ileri sarma ile oyun" width="1080" height="498" loading="lazy"></div><figcaption>Yatay ekran, 3x hız</figcaption></figure>
+        <figure><div class="phone"><img src="/assets/game_menu.webp" alt="Duraklatma menüsü" width="540" height="1171" loading="lazy"></div><figcaption>Duraklatma menüsü</figcaption></figure>
+        <figure><div class="phone"><img src="/assets/online.webp" alt="Online oyun lobisi" width="540" height="1171" loading="lazy"></div><figcaption>Online lobi</figcaption></figure>
+        <figure><div class="phone"><img src="/assets/settings.webp" alt="Ayarlar ekranı" width="540" height="1171" loading="lazy"></div><figcaption>Ayarlar</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="room" id="teknik">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Makine dairesi</p>
+        <h2>Sıfırdan yazılmış bir NES</h2>
+        <p class="lead">Retro Salon başka bir emülatörün kabuğu değil. İşlemcisinden ses çipine kadar her parçası bu uygulama için yazıldı ve test ROM'larıyla doğrulandı.</p>
+      </div>
+      <dl class="specs">
+        <div class="spec"><dt>İŞLEMCİ</dt><dd><b>6502</b>Resmi ve gizli komutların tamamı, nestest ve blargg testlerinden geçiyor.</dd></div>
+        <div class="spec"><dt>GRAFİK</dt><dd><b>256×240</b>Nokta bazlı PPU, 64 renkli palet, sprite 0 çarpışması.</dd></div>
+        <div class="spec"><dt>SES</dt><dd><b>5 kanal</b>İki kare dalga, üçgen, gürültü ve DMC. 44,1 kHz çıkış.</dd></div>
+        <div class="spec"><dt>KARTUŞLAR</dt><dd><b>8 mapper</b>NROM, MMC1, UxROM, CNROM, MMC3, AxROM, Color Dreams, GxROM.</dd></div>
+        <div class="spec"><dt>BOYUT</dt><dd><b>1,1 MB</b>Android 8.0 ve üzeri. İnternet sadece online oyunda kullanılır.</dd></div>
+        <div class="spec"><dt>ONLINE</dt><dd><b>Lockstep</b>Her karede iki oyuncunun tuşları eşlenir, senkron kontrolü otomatik.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="room" id="sss" style="padding-top: 0;">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Sık sorulanlar</p>
+        <h2>Merak ettiklerin</h2>
+      </div>
+      <div class="faq">
+        <details><summary>Uygulamada oyunlar hazır geliyor mu?</summary><p>Hayır. Retro Salon bir emülatördür ve içinde oyun yoktur. Sahip olduğun kartuşların yedeklerini (.nes) ya da yapımcılarının ücretsiz dağıttığı homebrew oyunları "Oyun Ekle" ile kütüphanene eklersin. .zip içindeki oyunları da açar.</p></details>
+        <details><summary>Hangi oyunlar çalışır?</summary><p>NES kütüphanesinin büyük çoğunluğunun kullandığı 8 kartuş türü (mapper) destekleniyor. Desteklenmeyen bir oyun eklersen uygulama bunu sana söyler.</p></details>
+        <details><summary>Online oynamak için ne gerekiyor?</summary><p>İkinizin telefonunda da Retro Salon ve aynı oyun dosyası olmalı. Odayı kuran kişi kodu paylaşır, diğeri kodu girer. Hesap açmanız gerekmez.</p></details>
+        <details><summary>Ücretli mi, reklam var mı?</summary><p>Ücretsiz. Reklam yok, hesap yok, izleme yok.</p></details>
+        <details><summary>Kayıtlarım nerede duruyor?</summary><p>Kayıtların, oyunların ve ayarların sadece senin telefonunda durur. Ayrıntılar <a href="/gizlilik">gizlilik politikasında</a>.</p></details>
+        <details><summary>Fiziksel kumanda bağlayabilir miyim?</summary><p>Evet. Bluetooth ya da USB gamepad'ler ve klavye çalışır. L1 geri sarar, R1 hızlı ileri sarmayı açıp kapatır.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <h2>Jetonun hazır mı?</h2>
+      <div class="cta">
+        <a class="btn btn-red" href="/indir/retro-salon.apk">APK'yı indir</a>
+        <span class="soon"><span>Çok yakında</span><b>Google Play'de</b></span>
+      </div>
+      <p class="insert" aria-hidden="true">PRESS START</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026 Retro Salon · <a href="/gizlilik">Gizlilik politikası</a></p>
+    <p>NES, Nintendo'nun ticari markasıdır. Retro Salon'un Nintendo ile bir bağlantısı yoktur.</p>
+  </div>
+</footer>
+
+<script>
+// 10x10 pixel icons: one row per string, letters pick the color.
+const ICONS = {
+  online: ["..rrrrrr..",".r......r.","r..gggg..r","..g....g..",".g..rr..g.","...r..r...","..........","....gg....","....gg....",".........."],
+  rewind: ["..........","...g...g..","..gg..gg..",".ggg.ggg..","gggggggg..",".ggg.ggg..","..gg..gg..","...g...g..","..........",".........."],
+  save:   ["rrrrrrrr..","r.wwww.rr.","r.wwww.rrr","r......rrr","rrrrrrrrrr","r.gggggg.r","r.g....g.r","r.gggggg.r","r.g....g.r","rrrrrrrrrr"],
+  turbo:  ["....gg....","...gg.....","..gg......",".ggggggg..","....gg....","...gg.....","..gg......",".gg.......","gg........",".........."],
+  crt:    ["gggggggggg","g........g","g.wwwwww.g","g........g","g.wwwwww.g","g........g","g.wwwwww.g","gggggggggg","...gggg...","..gggggg.."],
+  fast:   ["..........","..r...r...","..rr..rr..","..rrr.rrr.","..rrrrrrrr","..rrr.rrr.","..rr..rr..","..r...r...","..........",".........."],
+  code:   ["..........",".gg....gg.","g..g..g..g","g..g..g..g",".gg....gg.","....rr....","....rr....","..rrrrrr..","....rr....","...r..r..."],
+  pad:    ["..........",".rrrrrrrr.","rrwrrrrrrr","rwwwrrggrr","rrwrrrrggr","rrrrrrrrrr","rr......rr","r........r","..........",".........."],
+};
+const COLORS = { r: "#e63946", g: "#ffc400", w: "#f0f0f8" };
+document.querySelectorAll("svg[data-icon]").forEach(svg => {
+  const rows = ICONS[svg.dataset.icon] || [];
+  let out = "";
+  rows.forEach((row, y) => [...row].forEach((c, x) => {
+    if (COLORS[c]) out += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${COLORS[c]}"/>`;
+  }));
+  svg.innerHTML = out;
+});
+</script>
+</body>
+</html>
