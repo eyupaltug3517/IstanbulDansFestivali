@@ -1,0 +1,17 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+# Test ROMs are downloaded on demand
+app/src/test/resources/roms/
+
+# Signing key and its passwords stay local
+keystore/
+keystore.properties
+*.keystore
+*.jks
