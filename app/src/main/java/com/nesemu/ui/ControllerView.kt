@@ -39,6 +39,12 @@ class ControllerView(context: Context, private val listener: Listener) : View(co
     var fastForward = false
         set(v) { field = v; invalidate() }
     var fastSpeed = 3
+    /** Online play: rewind and fast-forward are hidden. */
+    var netMode = false
+        set(v) { field = v; invalidate() }
+    /** Status line shown above the picture (e.g. online room and ping). */
+    var statusText: String? = null
+        set(v) { if (v != field) { field = v; invalidate() } }
 
     // Geometry
     private var dpadX = 0f; private var dpadY = 0f; private var dpadR = 0f
@@ -197,6 +203,7 @@ class ControllerView(context: Context, private val listener: Listener) : View(co
     }
 
     private fun drawTools(c: Canvas) {
+        if (netMode) { drawMenuTool(c); return }
         // Rewind: two left-pointing triangles.
         c.drawCircle(rewX, toolY, toolR, if (state and REWIND != 0) toolActive else toolPaint)
         val t = toolR * 0.32f
@@ -204,6 +211,10 @@ class ControllerView(context: Context, private val listener: Listener) : View(co
         // Fast-forward: two right-pointing triangles.
         c.drawCircle(ffX, toolY, toolR, if (fastForward) toolActive else toolPaint)
         triangle(c, ffX - t * 0.7f, toolY, t, 1); triangle(c, ffX + t * 0.7f, toolY, t, 1)
+        drawMenuTool(c)
+    }
+
+    private fun drawMenuTool(c: Canvas) {
         // Menu: three bars.
         c.drawCircle(menuX, toolY, toolR, if (state and MENU != 0) toolActive else toolPaint)
         val bw = toolR * 0.5f; val bh = dp(2.2f)
@@ -212,6 +223,7 @@ class ControllerView(context: Context, private val listener: Listener) : View(co
 
     private fun drawBadge(c: Canvas) {
         val msg = when {
+            statusText != null -> statusText!!
             state and REWIND != 0 -> "◀◀  Geri sarılıyor"
             fastForward -> "▶▶  ${fastSpeed}x hız"
             else -> return
@@ -256,8 +268,8 @@ class ControllerView(context: Context, private val listener: Listener) : View(co
         if (x > selectRect.left - slop && x < selectRect.right + slop && y > selectRect.top - slop && y < selectRect.bottom + slop) b = b or Buttons.SELECT
         if (x > startRect.left - slop && x < startRect.right + slop && y > startRect.top - slop && y < startRect.bottom + slop) b = b or Buttons.START
         val toolHit = toolR * 1.3f
-        if (inCircle(x, y, rewX, toolY, toolHit)) b = b or REWIND
-        if (inCircle(x, y, ffX, toolY, toolHit)) b = b or FFWD
+        if (!netMode && inCircle(x, y, rewX, toolY, toolHit)) b = b or REWIND
+        if (!netMode && inCircle(x, y, ffX, toolY, toolHit)) b = b or FFWD
         if (inCircle(x, y, menuX, toolY, toolHit)) b = b or MENU
         return b
     }

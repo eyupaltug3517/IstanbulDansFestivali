@@ -89,6 +89,9 @@ class Ppu(private val mapper: Mapper, private val onNmi: () -> Unit) : Stateful 
         }
     }
 
+    /** Side-effect free read of PPU memory, for tools and debugging. */
+    fun debugRead(addr: Int): Int = read(addr)
+
     private fun write(addr: Int, value: Int) {
         val a = addr and 0x3FFF
         when {

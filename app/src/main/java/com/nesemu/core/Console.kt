@@ -129,6 +129,15 @@ class Console(romData: ByteArray, sampleRate: Int = 44100) : CpuBus {
         return bit or 0x40
     }
 
+    /** Cheap fingerprint of the machine state, used to detect netplay desyncs. */
+    fun stateHash(): Int {
+        val crc = java.util.zip.CRC32()
+        crc.update(ram)
+        crc.update(cpu.a); crc.update(cpu.x); crc.update(cpu.y); crc.update(cpu.sp)
+        crc.update(cpu.pc and 0xFF); crc.update(cpu.pc shr 8)
+        return crc.value.toInt()
+    }
+
     // ---- Battery-backed RAM ----
 
     val hasBattery get() = cart.hasBattery

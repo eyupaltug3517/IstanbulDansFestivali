@@ -7,6 +7,8 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputFilter
 import android.text.InputType
 import android.text.format.DateUtils
@@ -30,6 +32,10 @@ import android.widget.Toast
 import com.nesemu.core.Buttons
 import com.nesemu.core.Cheat
 import com.nesemu.core.Console
+import com.nesemu.net.NetConfig
+import com.nesemu.net.Netplay
+import com.nesemu.net.NetplayDriver
+import com.nesemu.net.SupabaseTransport
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -50,6 +56,20 @@ class GameActivity : Activity(), ControllerView.Listener {
     /** Overlays (menu, slot picker, cheats), top-most last. */
     private val overlays = ArrayList<View>()
 
+    // Online play
+    private var netRole: String? = null
+    private var net: Netplay? = null
+    private var roomCode = ""
+    private var waitingOverlay: View? = null
+    private val ui = Handler(Looper.getMainLooper())
+    private val statusUpdater = object : Runnable {
+        override fun run() {
+            updateNetStatus()
+            ui.postDelayed(this, 500)
+        }
+    }
+    private val isOnline get() = netRole != null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -67,7 +87,9 @@ class GameActivity : Activity(), ControllerView.Listener {
         }
         storage.migrateLegacy(rom, console.cart.crc)
         loadBattery()
-        applyCheats(storage.loadCheats(rom))
+        netRole = intent.getStringExtra(EXTRA_NET)
+        // Cheats would make the two players' games differ, so they are off online.
+        if (!isOnline) applyCheats(storage.loadCheats(rom))
 
         gameView = GameView(this)
         controls = ControllerView(this, this)
@@ -82,13 +104,17 @@ class GameActivity : Activity(), ControllerView.Listener {
         applySettings()
 
         val auto = storage.autoStateFile(rom)
-        if (settings.autoResume && auto.exists()) {
+        if (netRole != NET_GUEST && settings.autoResume && auto.exists()) {
             t.post {
                 val ok = try { console.loadState(auto.readBytes()); true } catch (e: Exception) { false }
                 if (ok) runOnUiThread { toast("Kaldığın yerden devam ediliyor") }
             }
         }
         t.start()
+        when (netRole) {
+            NET_HOST -> startHosting()
+            NET_GUEST -> startGuest()
+        }
     }
 
     private fun applySettings() {
@@ -100,6 +126,7 @@ class GameActivity : Activity(), ControllerView.Listener {
         controls.scale = settings.padScale
         controls.haptics = settings.haptics
         controls.fastSpeed = settings.fastSpeed
+        controls.netMode = isOnline
     }
 
     // ---- ControllerView.Listener ----
@@ -111,10 +138,12 @@ class GameActivity : Activity(), ControllerView.Listener {
     }
 
     override fun onRewind(active: Boolean) {
+        if (isOnline) return
         thread?.rewinding = active
     }
 
     override fun onFastForward() {
+        if (isOnline) return
         val t = thread ?: return
         t.fastForward = !t.fastForward
         controls.fastForward = t.fastForward
@@ -162,6 +191,9 @@ class GameActivity : Activity(), ControllerView.Listener {
 
     override fun onDestroy() {
         super.onDestroy()
+        ui.removeCallbacksAndMessages(null)
+        net?.close()
+        net = null
         thread?.shutdown()
         thread = null
     }
@@ -172,9 +204,11 @@ class GameActivity : Activity(), ControllerView.Listener {
         val latch = CountDownLatch(1)
         t.post {
             try {
-                saveBattery()
-                storage.writeAtomic(storage.autoStateFile(rom), console.saveState())
-                storage.writePng(storage.coverFile(rom), console.ppu.frame.copyOf())
+                if (netRole != NET_GUEST) {
+                    saveBattery()
+                    storage.writeAtomic(storage.autoStateFile(rom), console.saveState())
+                    storage.writePng(storage.coverFile(rom), console.ppu.frame.copyOf())
+                }
             } catch (_: Exception) {
             } finally {
                 latch.countDown()
@@ -265,6 +299,15 @@ class GameActivity : Activity(), ControllerView.Listener {
         c.addView(Theme.label(this, "DURAKLATILDI", 12f, Theme.ACCENT_2, bold = true).apply { typeface = Theme.TITLE_FONT })
         c.addView(Theme.label(this, title, 20f, bold = true).apply { setPadding(0, dp(4f), 0, dp(8f)) })
         c.addView(menuButton("▶   Devam Et", Theme.ACCENT) { popOverlay() })
+        if (isOnline) {
+            c.addView(Theme.label(this, "Online oyunda menü açıkken arkadaşının oyunu da bekler.", 13f, Theme.TEXT_DIM).apply {
+                setPadding(dp(4f), dp(10f), dp(4f), 0)
+            })
+            c.addView(menuButton("⚙   Ayarlar") { startActivity(Intent(this, SettingsActivity::class.java)) })
+            c.addView(menuButton("🚪   Odadan Çık") { finish() })
+            pushOverlay(c)
+            return
+        }
         c.addView(menuButton("💾   Kaydet") { showSlots(save = true) })
         c.addView(menuButton("📂   Kayıt Yükle") { showSlots(save = false) })
         c.addView(menuButton("🎯   Hile Kodları") { showCheats() })
@@ -452,7 +495,8 @@ class GameActivity : Activity(), ControllerView.Listener {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (overlays.isNotEmpty()) popOverlay() else showPauseMenu()
+        if (waitingOverlay != null) finish()
+        else if (overlays.isNotEmpty()) popOverlay() else showPauseMenu()
     }
 
     // ---- Physical gamepad / keyboard ----
@@ -472,7 +516,7 @@ class GameActivity : Activity(), ControllerView.Listener {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val fromPad = event.source and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD ||
             event.source and InputDevice.SOURCE_KEYBOARD == InputDevice.SOURCE_KEYBOARD
-        if (fromPad && overlays.isEmpty()) {
+        if (fromPad && overlays.isEmpty() && !isOnline) {
             val down = event.action == KeyEvent.ACTION_DOWN
             when (event.keyCode) {
                 KeyEvent.KEYCODE_BUTTON_L1 -> { thread?.rewinding = down; return true }
@@ -489,8 +533,125 @@ class GameActivity : Activity(), ControllerView.Listener {
         return super.dispatchKeyEvent(event)
     }
 
+    // ---- Online ----
+
+    private fun startHosting() {
+        val t = thread ?: return
+        roomCode = (1000..9999).random().toString()
+        val n = Netplay(SupabaseTransport(NetConfig.PROJECT_URL, NetConfig.API_KEY), isHost = true, room = roomCode)
+        net = n
+        val driver = NetplayDriver(console, n)
+        n.events = object : Netplay.Events {
+            override fun onPeerJoined() {
+                t.post {
+                    driver.hostRestart(title)
+                    t.netDriver = driver
+                }
+                runOnUiThread {
+                    toast("Arkadaşın bağlandı! İyi oyunlar 🎮")
+                    waitingOverlay?.let { closeAllOverlays() }
+                    waitingOverlay = null
+                }
+            }
+            override fun onDesync() {
+                // Re-send our state; the guest reloads it and both continue in sync.
+                t.post { if (t.netDriver != null) driver.hostRestart(title) }
+                runOnUiThread { toast("Senkron düzeltiliyor…") }
+            }
+            override fun onPeerLeft() = runOnUiThread { peerLeft() }
+            override fun onError(message: String) = runOnUiThread { netFailed(message) }
+        }
+        n.connect()
+        showWaitingForFriend()
+        ui.post(statusUpdater)
+    }
+
+    private fun startGuest() {
+        val t = thread ?: return
+        val n = NetHolder.guestSession
+        NetHolder.guestSession = null
+        if (n == null) {
+            finish()
+            return
+        }
+        net = n
+        roomCode = intent.getStringExtra(EXTRA_ROOM) ?: n.room
+        n.events = object : Netplay.Events {
+            override fun onDesync() = runOnUiThread { toast("Senkron düzeltiliyor…") }
+            override fun onPeerLeft() = runOnUiThread { peerLeft() }
+            override fun onError(message: String) = runOnUiThread { netFailed(message) }
+        }
+        t.netDriver = NetplayDriver(console, n)
+        ui.post(statusUpdater)
+    }
+
+    private fun showWaitingForFriend() {
+        controls.releaseAll()
+        thread?.setPausedState(true)
+        val c = card()
+        c.addView(Theme.label(this, "ONLİNE ODA", 12f, Theme.ACCENT_2, bold = true).apply { typeface = Theme.TITLE_FONT })
+        c.addView(Theme.label(this, title, 18f, bold = true).apply { setPadding(0, dp(4f), 0, dp(14f)) })
+        c.addView(Theme.label(this, "Oda kodu", 14f, Theme.TEXT_DIM).apply { gravity = Gravity.CENTER })
+        c.addView(Theme.label(this, roomCode, 48f, Theme.ACCENT_2, bold = true).apply {
+            typeface = Theme.TITLE_FONT
+            letterSpacing = 0.3f
+            gravity = Gravity.CENTER
+        })
+        c.addView(Theme.label(this,
+            "Arkadaşın Retro Salon'da \"Online Oyna → Odaya Katıl\" deyip bu kodu girsin. " +
+                "Onun telefonunda da aynı oyun olmalı.\n\nSen 1. oyuncusun, arkadaşın 2. oyuncu.",
+            14f, Theme.TEXT_DIM).apply { gravity = Gravity.CENTER; setPadding(0, dp(10f), 0, dp(6f)) })
+        c.addView(Theme.label(this, "⏳  Arkadaşın bekleniyor…", 15f, Theme.ACCENT_2, bold = true).apply {
+            gravity = Gravity.CENTER; setPadding(0, dp(8f), 0, dp(6f))
+        })
+        c.addView(menuButton("📤   Kodu Paylaş", Theme.ACCENT) {
+            val text = "Retro Salon'da birlikte oynayalım! 🎮\nOyun: $title\nOda kodu: $roomCode"
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "Kodu paylaş"))
+        })
+        c.addView(menuButton("İptal") { finish() })
+        waitingOverlay = pushOverlay(c)
+    }
+
+    private fun updateNetStatus() {
+        val n = net ?: return
+        val t = thread ?: return
+        val player = if (n.isHost) "1P" else "2P"
+        val ping = if (n.pingMs >= 0) " · ${n.pingMs} ms" else ""
+        controls.statusText = when {
+            !n.started -> null
+            t.waitingForPeer -> "⏳ Arkadaşın bekleniyor…"
+            else -> "🌐 Oda $roomCode · $player$ping"
+        }
+    }
+
+    private fun peerLeft() {
+        if (isFinishing) return
+        thread?.setPausedState(true)
+        AlertDialog.Builder(this)
+            .setTitle("Arkadaşın ayrıldı")
+            .setMessage("Bağlantı koptu ya da arkadaşın oyundan çıktı.")
+            .setCancelable(false)
+            .setPositiveButton("Çık") { _, _ -> finish() }
+            .show()
+    }
+
+    private fun netFailed(message: String) {
+        if (isFinishing) return
+        thread?.setPausedState(true)
+        AlertDialog.Builder(this)
+            .setTitle("Online bağlantı sorunu")
+            .setMessage(message + "\n\nİnternet bağlantını kontrol edip tekrar dene.")
+            .setCancelable(false)
+            .setPositiveButton("Çık") { _, _ -> finish() }
+            .show()
+    }
+
     companion object {
         const val EXTRA_ROM = "rom"
+        const val EXTRA_NET = "net"
+        const val EXTRA_ROOM = "room"
+        const val NET_HOST = "host"
+        const val NET_GUEST = "guest"
     }
 }
 

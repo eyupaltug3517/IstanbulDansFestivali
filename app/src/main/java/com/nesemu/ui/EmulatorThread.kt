@@ -5,6 +5,7 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import com.nesemu.core.Buttons
 import com.nesemu.core.Console
+import com.nesemu.net.NetplayDriver
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -27,6 +28,13 @@ class EmulatorThread(
     @Volatile var fastForward = false
     @Volatile var fastSpeed = 3
     @Volatile var rewinding = false
+
+    /** Online session; when set, frames advance in lockstep and rewind/fast-forward are off. */
+    @Volatile var netDriver: NetplayDriver? = null
+    /** True while the online game is stalled waiting for the other player's inputs. */
+    @Volatile var waitingForPeer = false
+        private set
+    private var stalledSince = 0L
 
     /** Frames actually emulated while not paused, for play-time statistics. */
     @Volatile var framesPlayed = 0L
@@ -80,6 +88,33 @@ class EmulatorThread(
                     if (playing) { track.pause(); track.flush(); playing = false }
                     synchronized(lock) { if (paused && running && tasks.isEmpty()) lock.wait(100) }
                     next = System.nanoTime()
+                    continue
+                }
+
+                val driver = netDriver
+                if (driver != null) {
+                    val turboOn = (driver.frame shr 1) and 1 == 0
+                    if (!driver.step(held or (if (turboOn) turbo else 0))) {
+                        val t = System.nanoTime()
+                        if (stalledSince == 0L) stalledSince = t
+                        waitingForPeer = t - stalledSince > 400_000_000L
+                        sleep(1)
+                        next = System.nanoTime()
+                        continue
+                    }
+                    stalledSince = 0L
+                    waitingForPeer = false
+                    framesPlayed++
+                    view.drawFrame(console.ppu.frame)
+                    val n = console.apu.drainSamples(samples)
+                    if (soundOn) {
+                        if (!playing) { track.play(); playing = true }
+                        track.write(samples, 0, n)
+                    } else {
+                        next += frameNs
+                        val wait = next - System.nanoTime()
+                        if (wait > 0) sleep(wait / 1_000_000, (wait % 1_000_000).toInt()) else next = System.nanoTime()
+                    }
                     continue
                 }
 

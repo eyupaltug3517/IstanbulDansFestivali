@@ -81,6 +81,12 @@ class MainActivity : Activity() {
             topMargin = -dp(12f)
         })
         header.addView(logo, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        header.addView(Theme.pillButton(this, "🌐 Online", Theme.SURFACE) {
+            startActivity(Intent(this@MainActivity, OnlineActivity::class.java))
+        }.apply {
+            textSize = 14f
+            setPadding(dp(14f), dp(12f), dp(14f), dp(12f))
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(48f)).apply { rightMargin = dp(10f) })
         header.addView(TextView(this).apply {
             text = "⚙"
             textSize = 24f

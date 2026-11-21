@@ -12,6 +12,7 @@ Eski oyun severler için sıfırdan Kotlin ile yazılmış bir NES emülatörü.
 - **Kütüphane:** otomatik ekran görüntüsü kapaklar, arama, favoriler, oynama süresi, "kaldığın yerden devam"
 - **Oyun içi:** turbo A/B, hızlı ileri sarma (2-4x), geri sarma (~12 sn), Game Genie ve RAM hile kodları
 - **Görüntü:** keskin piksel, CRT tarama çizgileri veya yumuşak filtre; ayarlanabilir kumanda boyutu/saydamlığı
+- **Online 2 kişilik:** oda kodu ile arkadaşınla internetten oyna (lockstep netplay, Supabase Realtime üzerinden)
 - .zip içinden ve çoklu dosya seçerek oyun ekleme, dosya yöneticisinden "Birlikte aç"
 - Dikey ve yatay ekran, Bluetooth/USB gamepad (L1 geri sar, R1 hızlı ileri) ve klavye desteği
 
